@@ -26,6 +26,10 @@ class ModelRunner:
         dist.init_process_group("nccl", "tcp://localhost:2333", world_size=self.world_size, rank=rank)
         torch.cuda.set_device(rank)
         default_dtype = torch.get_default_dtype()
+        _dt = getattr(hf_config, "dtype", None) or getattr(hf_config, "torch_dtype", None) or torch.bfloat16
+        if isinstance(_dt, str):
+            _dt = getattr(torch, _dt.split(".")[-1])
+        hf_config.dtype = _dt
         torch.set_default_dtype(hf_config.dtype)
         torch.set_default_device("cuda")
         self.model = Qwen3ForCausalLM(hf_config)
